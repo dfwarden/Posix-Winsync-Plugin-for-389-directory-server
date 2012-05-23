@@ -93,6 +93,7 @@ static windows_attribute_map user_attribute_map[] =
 	{ "loginShell","loginShell"},
 	{ "uidNumber","uidNumber" },
 	{ "gidNumber","gidNumber" },
+	{ "mailNickname","mailAlternateAddress" },
 	{ NULL, NULL }
 };
 
@@ -826,6 +827,15 @@ posix_winsync_pre_ds_mod_user_cb(void *cbdata, const Slapi_Entry *rawentry,
                     slapi_log_error(SLAPI_LOG_PLUGIN, posix_winsync_plugin_name,
                         "<-- _pre_ds_mod_user_cb add oc:shadowAccount\n");
                 }
+                slapi_value_init_string(voc,"mailRecipient");
+                if (slapi_attr_value_find(oc_attr, slapi_value_get_berval(voc)) != 0) {
+                    Slapi_Value *oc_nv = slapi_value_new();
+        
+                    slapi_value_init_string(oc_nv, "mailRecipient");
+                    slapi_valueset_add_value(oc_vs, oc_nv);                        
+                    slapi_log_error(SLAPI_LOG_PLUGIN, posix_winsync_plugin_name,
+                        "<-- _pre_ds_mod_user_cb add oc:mailRecipient\n");
+                }
                 slapi_mods_add_mod_values(smods,LDAP_MOD_REPLACE,
                     "objectClass",valueset_get_valuearray(oc_vs));
                 slapi_value_free(&oc_nv);
@@ -1011,6 +1021,7 @@ posix_winsync_pre_ds_add_user_cb(void *cbdata, const Slapi_Entry *rawentry,
 	    int rc;
         rc = slapi_entry_add_string(ds_entry, "objectClass" , "posixAccount" );
         rc |= slapi_entry_add_string(ds_entry, "objectClass" , "shadowAccount" );
+        rc |= slapi_entry_add_string(ds_entry, "objectClass" , "mailRecipient" );
         rc |= slapi_entry_add_string(ds_entry, "objectClass" , "inetUser" );
         if (rc != 0 )
             slapi_log_error(SLAPI_LOG_PLUGIN, posix_winsync_plugin_name,
